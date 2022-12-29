@@ -1,0 +1,188 @@
+"""
+Abrar Yaser
+CS51
+04/05/2022
+"""
+import copy
+
+
+class NQueenState:
+    """
+    the state class that will be responsible for representing the state of the board and for asking questions
+    about the board, specifically, if it’s a goal state and what valid states we can get to from the current state.
+    Once we have defined this functionality, then we should be able to solve the puzzle with any search algorithm.
+
+    """
+
+    def __init__(self, size):
+        """
+        this is a constructor that initializes the instance variables
+        :param size: size of the board
+        """
+        self.size = size  # initializes the size of the board
+        self.num_queens_placed = 0  # initializes the number of queens places
+        self.board = []  # empty list to append lists to
+        self.create_board()  # method to create a board
+
+    def create_board(self):
+
+        """
+        this method creates a board with all zeros
+        :return: None
+        """
+
+        for i in range(self.size):
+            row_list = []  # empty list of rows
+            for j in range(self.size):
+                row_list.append(0)  # appending lists depending on the size
+            self.board.append(row_list)
+
+    def __str__(self):
+        """
+        this method provides a string representation of the board
+        :return: a string mentioning the board size, the number of queens places, and the actual board
+        """
+
+        matrix = ""
+
+        for i in self.board:
+            matrix += str(i) + "\n"  # to represent the board as a matrix instead of a list
+
+        return "Board size: " + str(self.size) + "\n" + "Number of queens placed: " + str(self.num_queens_placed) + \
+            "\n" + matrix
+
+    def is_row_valid(self, row):
+        """
+        this method is a helper method to check if a specific row has a queen
+        :param row: a row that will be checked
+        :return: a boolean
+        """
+
+        for i in range(self.size):
+            if self.board[row][i] == 1:  # iterates over the row
+                return False
+
+        return True  # returns True if there is no queen anywhere on the row
+
+    def is_column_valid(self, column):
+        """
+        the method checks if a specific column has a queen
+        :param column: a constant column
+        :return: a boolean
+        """
+
+        for i in range(self.size):
+            if self.board[i][column] == 1:  # iterates over the column
+                return False
+
+        return True  # returns True if there is no queen anywhere on the column
+
+    def is_diagonal_valid(self, row, column):
+        """
+        the method checks if there is a queen anywhere on a specific diagonal
+        :param row: a constant row
+        :param column: a constant column
+        :return: a boolean
+        """
+
+        for i in range(self.size):
+            # makes sure we do not place a queen outside the board
+            # or on any combination of a diagonal of an existing queen
+            if row + i < self.size and column + i < self.size and self.board[row + i][column + i] == 1:
+                return False
+            elif row + i < self.size and column - i >= 0 and self.board[row + i][column - i] == 1:
+                return False
+            elif row - i >= 0 and column - i >= 0 and self.board[row - i][column - i] == 1:
+                return False
+            elif row - i >= 0 and column + i < self.size and self.board[row - i][column + i] == 1:
+                return False
+
+        return True  # returns True only if the queen we are trying to place is inside the board and not in
+        # the diagonal of an existing queen
+
+    def is_valid_move(self, row, column):
+        """
+        the method checks if our next move is valid or not
+        :param row: a given row
+        :param column: a given column
+        :return: a boolean
+        """
+
+        if self.num_queens_placed >= self.size:  # if there are more queens placed than the size
+            return False
+
+        elif self.board[row][column] == 1:  # if there is already an existing queen
+            return False
+
+        elif not self.is_row_valid(row):  # calling is_row_valid
+            return False
+
+        elif not self.is_column_valid(column):  # calling is_column_valid
+            return False
+
+        elif not self.is_diagonal_valid(row, column):  # calling is_diagonal_valid
+            return False
+
+        else:
+            return True
+
+    def add_queen(self, row, column):
+        """
+        this method adds a queen at row,column
+        :param row: a given row
+        :param column: a given column
+        :return: a new state
+        """
+
+        new_state = copy.deepcopy(self)  # copies nested lists
+
+        new_state.board[row][column] = 1
+        new_state.num_queens_placed += 1
+
+        return new_state  # update this new state appropriately by accessing its instance variables
+
+    def next_states(self):
+
+        """
+        this method returns a list of valid states that can be reached by adding one more queen to the board
+        :return: a list
+        """
+        list_of_next_states = []
+        for column in range(self.size):
+            if self.is_valid_move(self.num_queens_placed, column):
+                # moves on to the new state if existing state has a queen
+                new_state = self.add_queen(self.num_queens_placed, column)
+                list_of_next_states.append(new_state)
+
+        return list_of_next_states
+
+    def is_goal(self):
+        """
+        this method returns True if this state represents a goal state and False otherwise.
+        :return: a boolean
+        """
+        return self.num_queens_placed == self.size  # checks if the number of queens placed is equal to the size
+
+
+def dfs(state):
+    """Recursive depth first search implementation
+
+    Input:
+    Takes as input a state.  The state class MUST have the following
+    returned True) that can be reached from the input state.
+    """
+
+    # if the current state is a goal state, then return it in a list
+    if state.is_goal():
+        return [state]
+    else:
+        # else, recurse on the possible next states
+        result = []
+
+        for s in state.next_states():
+            # append all of the s
+            result += dfs(s)
+
+        return result
+
+
